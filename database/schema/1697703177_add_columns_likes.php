@@ -13,18 +13,13 @@ return new class implements Migration
      */
     public function up()
     {
-        Schema::create('comments', function (Table $table) {
-            $table->id();
+        Schema::table('likes', function (Table $table) {
+            $table->addColumn(function (Table $table) {
 
-            $table->integer('user_id');
-
-            $table->string('nama');
-            $table->boolean('hadir')->default(false);
-            $table->text('komentar')->nullable();
+                $table->integer('user_id')->nullable();
+            });
 
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-
-            $table->timeStamp();
         });
     }
 
@@ -35,6 +30,9 @@ return new class implements Migration
      */
     public function down()
     {
-        Schema::drop('comments');
+        Schema::table('likes', function (Table $table) {
+            $table->dropForeign('user_id');
+            $table->dropColumn('user_id');
+        });
     }
 };

@@ -8,26 +8,48 @@ use Core\Routing\Route;
 
 /**
  * Make something great with this app
- * keep simple yahh
+ * keep simple yeah.
  */
 
 Route::get('/', WelcomeController::class);
 
 Route::prefix('/api')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::options('/login');
 
-    Route::prefix('/comment')->controller(CommentController::class)->group(function () {
-        Route::get('/all', 'all');
+    // Login
+    Route::prefix('/session')->group(function () {
+        Route::post('/', [AuthController::class, 'login']);
+        Route::options('/'); // Preflight request [/api/session]
+    });
 
-        Route::middleware(AuthMiddleware::class)->group(function () {
-            Route::get('/', 'index');
+    // Comment
+    Route::prefix('/comment')->middleware(AuthMiddleware::class)->group(function () {
+
+        // Get and create comment
+        Route::controller(CommentController::class)->group(function () {
+            Route::get('/', 'get');
             Route::post('/', 'create');
-            Route::options('/');
+        });
 
-            Route::get('/{id}', 'show');
-            Route::delete('/{id}', 'destroy');
-            Route::options('/{id}');
+        Route::options('/'); // Preflight request [/api/comment]
+
+        Route::prefix('/{id}')->group(function () {
+            Route::controller(CommentController::class)->group(function () {
+
+                // Get one
+                Route::get('/', 'show');
+
+                // Update comment
+                Route::put('/', 'update');
+
+                // Like or unlike comment
+                Route::post('/', 'like');
+                Route::patch('/', 'unlike');
+
+                // Delete
+                Route::delete('/', 'destroy');
+            });
+
+            Route::options('/'); // Preflight request [/api/comment/{id}]
         });
     });
 });
