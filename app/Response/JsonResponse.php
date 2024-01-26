@@ -2,28 +2,70 @@
 
 namespace App\Response;
 
-use Stringable;
+use Core\Http\Respond;
 
-class JsonResponse implements Stringable
+class JsonResponse extends Respond
 {
-    private $content;
-
-    public function __toString(): string
+    public function success(array|object|int $data, int|null $code = null): JsonResponse
     {
-        return $this->content;
-    }
+        if (is_int($data)) {
+            $code = $data;
+            $data = [$this->codeHttpMessage($code)];
+        }
 
-    public function success(array|object $data, int $code): JsonResponse
-    {
-        $this->content = respond()->formatJson($data, null, $code);
+        $this->setContent(json([
+            'code' => $code,
+            'data' => $data,
+            'error' => null
+        ]));
+
+        $this->headers->set('Content-Type', 'application/json');
+        $this->setCode($code);
 
         return $this;
     }
 
-    public function error(array|object $error, int $code): JsonResponse
+    public function error(array|object|int $error, int|null $code = null): JsonResponse
     {
-        $this->content = respond()->formatJson(null, $error, $code);
+        if (is_int($error)) {
+            $code = $error;
+            $error = [$this->codeHttpMessage($code)];
+        }
+
+        $this->setContent(json([
+            'code' => $code,
+            'data' => null,
+            'error' => $error
+        ]));
+
+        $this->headers->set('Content-Type', 'application/json');
+        $this->setCode($code);
 
         return $this;
+    }
+
+    public function successOK(array|object $data): JsonResponse
+    {
+        return $this->success($data, Respond::HTTP_OK);
+    }
+
+    public function successStatusTrue(): JsonResponse
+    {
+        return $this->successOK(['status' => true]);
+    }
+
+    public function errorBadRequest(array|object $error): JsonResponse
+    {
+        return $this->error($error, Respond::HTTP_BAD_REQUEST);
+    }
+
+    public function errorNotFound(): JsonResponse
+    {
+        return $this->error(Respond::HTTP_NOT_FOUND);
+    }
+
+    public function errorServer(): JsonResponse
+    {
+        return $this->error(Respond::HTTP_INTERNAL_SERVER_ERROR);
     }
 }

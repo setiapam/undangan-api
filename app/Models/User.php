@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Core\Model\Model;
+use Core\Valid\Hash;
 
 final class User extends Model
 {
@@ -16,4 +17,18 @@ final class User extends Model
         'created_at',
         'updated_at',
     ];
+
+    public function __construct(array $data = [])
+    {
+        $this->fill($data);
+    }
+
+    protected function fakes(): array
+    {
+        return [
+            'nama' => fake()->name(),
+            'email' => fake()->email(),
+            'password' => Hash::make(fake()->text(8)),
+        ];
+    }
 }
